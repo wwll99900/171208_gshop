@@ -31,6 +31,11 @@ module.exports = {
       ? config.build.assetsPublicPath
       : config.dev.assetsPublicPath
   },
+  // 引入百度地图配置，剥离webpack打包，又不影响运行
+  externals: {
+    "returnCitySN": "returnCitySN",
+    "BMap":"BMap"
+    },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {

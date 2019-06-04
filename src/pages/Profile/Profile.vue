@@ -1,19 +1,27 @@
+// 点击我的显示的页面
 <template>
   <section class="profile">
     <HeaderTop title="我的"></HeaderTop>
     <section class="profile-number">
       <!-- 跳转到登录界面 -->
-      <router-link to="/login" href="javascript:" class="profile-link">
+      <!-- userInfo就是登录成功保存到state的值取出来的，有值代表已经登录，没有值代表没登录，进入不同页面 -->
+      <router-link
+        :to="userInfo._id ? '/userinfo':'/login'"
+        href="javascript:"
+        class="profile-link"
+      >
         <div class="profile_image">
           <i class="iconfont icon-person icon-dengluren"></i>
         </div>
         <div class="user-info">
-          <p class="user-info-top">登录/注册</p>
+          <!-- 如果前面有值就前面，没有就后面  s手机号登录就没有登录名，不需要显示-->
+          <p class="user-info-top" v-if="!userInfo.phone">{{userInfo.name || '登录/注册'}}</p>
           <p>
             <span class="user-icon">
               <i class="iconfont icon-iconmobile"></i>
             </span>
-            <span class="icon-mobile-number">暂无绑定手机号</span>
+            <!-- 有手机号就输出手机号，没有就后面的，用手机验证码登录就有 -->
+            <span class="icon-mobile-number">{{userInfo.phone ? userInfo.phone:'暂无绑定手机号'}}</span>
           </p>
         </div>
         <span class="arrow">
@@ -21,7 +29,7 @@
         </span>
       </router-link>
     </section>
-    
+
     <!-- 登录下面部分 -->
     <section class="profile_info_data border-1px">
       <ul class="info_data_list">
@@ -76,7 +84,7 @@
           <i class="iconfont icon-vip"></i>
         </span>
         <div class="my_order_div">
-          <span>硅谷外卖会员卡</span>
+          <span>甜心外卖会员卡</span>
           <span class="my_order_icon">
             <i class="iconfont icon-mjiantou-copy"></i>
           </span>
@@ -97,15 +105,42 @@
         </div>
       </a>
     </section>
+
+    <section class="profile_my_order border-1px">
+      <!-- mint-ui的button组件   登录成功就会有userInfo传到state,就会显示-->
+      <mt-button type="danger" style="width:100%" v-if="userInfo._id" @click="logout">退出登录</mt-button>
+    </section>
   </section>
 </template>
 
 
 <script>
 import HeaderTop from "../../components/HeaderTop/HeaderTop";
+import { mapState } from "vuex";
+// mint ui的message box模块
+import { MessageBox,Toast } from "mint-ui";
 export default {
-  components:{
-    HeaderTop,
+  computed: {
+    // 取出登录成功的用户名
+    ...mapState(["userInfo"])
+  },
+  components: {
+    HeaderTop
+  },
+  methods: {
+    logout() {
+      // mint ui的MessageBox组件的js部分
+      MessageBox.confirm("确认退出吗？").then(
+        action => {//then两个函数，点击确认
+            //  请求退出
+            this.$store.dispatch('logout')
+            // mint ui的toast组件
+            Toast('退出成功')
+        },
+        action => {//点击取消
+          console.log('点击了取消')
+        });
+    }
   }
 };
 </script>
@@ -115,9 +150,10 @@ export default {
 @import '../../common/stylus/mixins.styl';
 
 .profile { // 我的
-    width: 100%;
-    overflow:hidden;//这一页让他没有滚动
-    .header {
+  width: 100%;
+  overflow: hidden; // 这一页让他没有滚动
+
+  .header {
     background-color: #02a774;
     position: fixed;
     z-index: 100;
@@ -169,6 +205,7 @@ export default {
       }
     }
   }
+
   .profile-number {
     margin-top: 45.5px;
 

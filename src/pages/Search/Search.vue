@@ -1,79 +1,93 @@
 <template>
   <section class="search">
-    <HeaderTop title="搜索"></HeaderTop>
-    <form class="search_form" action="#">
-      <input type="search" name="search" placeholder="请输入商家或美食名称" class="search_input">
-      <input type="submit" name="submit" class="search_submit">
+    <!-- 头部子模块 -->
+    <HeaderTop title="搜索"/>
+    <form class="search_form" @submit.prevent="search">
+      <input type="search" placeholder="请输入商家名称" class="search_input" v-model="keyword">
+      <input type="submit" class="search_submit">
     </form>
+   <!-- 有搜索结果的时候 vuex里面出来的值，form用的是mint ui的组件-->
+    <section class="list" v-if="!noSearchShops">
+      <ul class="list_container">
+        <router-link
+          :to="{path:'/shop', query:{id:item.id}}"
+          tag="li"
+          v-for="item in searchShops"
+          :key="item.id"
+          class="list_li">
+          <section class="item_left">
+            <img :src="imgBaseUrl + item.image_path" class="restaurant_img">
+          </section>
+          <section class="item_right">
+            <div class="item_right_text">
+              <p>
+                <span>{{item.name}}</span>
+              </p>
+              <p>月售 {{item.month_sales||item.recent_order_num}} 单</p>
+              <p>
+                {{item.delivery_fee||item.float_minimum_order_amount}} 元起送 / 距离
+                {{item.distance}}
+              </p>
+            </div>
+          </section>
+        </router-link>
+      </ul>
+    </section>
+     
+     <div class="search_none" v-else>很抱歉！无搜索结果</div>
   </section>
 </template>
 
-
 <script>
 import HeaderTop from "../../components/HeaderTop/HeaderTop";
+import { mapState } from "vuex";
 export default {
-  components:{
-    HeaderTop,
+  components: {
+    HeaderTop
+  },
+  computed: {
+    ...mapState(["searchShops"])
+  },
+  watch:{
+    searchShops(value){
+      // 没有值的时候，下面就不出现搜索内容列表
+      if(!value.length){
+        this.noSearchShops=true
+      }else{
+        // 有值的时候显示  上面判断取得是！
+        this.noSearchShops=false
+      }
+    }
+  },
+  data() {
+    return {
+      keyword: "",
+      imgBaseUrl: 'http://cangdu.org:8001/img/',
+      noSearchShops:false
+    };
+  },
+  methods: {
+    search() {
+      // 得到搜索关键字   字符串的trim方法，如果这个字符串前后有空格，去空格
+      const keyword = this.keyword.trim();
+      if (keyword) {
+        // 触发vuex里面发送请求
+        this.$store.dispatch("searchShops", keyword);
+      }
+    }
   }
 };
 </script>
 
 
 <style lang="stylus" scoped>
-.search { // 搜索
+@import '../../common/stylus/mixins.styl';
+
+.search {
   width: 100%;
-  .header {
-    background-color: #02a774;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 45px;
+  height: 100%;
+  overflow: hidden;
 
-    .header_search {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 10%;
-      height: 50%;
-
-      .icon-sousuo {
-        font-size: 25px;
-        color: #fff;
-      }
-    }
-
-    .header_title {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 50%;
-      color: #fff;
-      text-align: center;
-
-      .header_title_text {
-        font-size: 20px;
-        color: #fff;
-        display: block;
-      }
-    }
-
-    .header_login {
-      font-size: 14px;
-      color: #fff;
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-
-      .header_login_text {
-        color: #fff;
-      }
-    }
-  }
   .search_form {
     clearFix();
     margin-top: 45px;
@@ -105,6 +119,53 @@ export default {
         background-color: #02a774;
       }
     }
+  }
+
+  .list {
+    .list_container {
+      background-color: #fff;
+
+      .list_li {
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        border-bottom: 1px solid $bc;
+
+        .item_left {
+          margin-right: 10px;
+
+          .restaurant_img {
+            width: 50px;
+            height: 50px;
+            display: block;
+          }
+        }
+
+        .item_right {
+          font-size: 12px;
+          flex: 1;
+
+          .item_right_text {
+            p {
+              line-height: 12px;
+              margin-bottom: 6px;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .search_none {
+    margin: 0 auto;
+    color: #333;
+    background-color: #fff;
+    text-align: center;
+    margin-top: 0.125rem;
   }
 }
 </style>
